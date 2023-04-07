@@ -1,0 +1,1 @@
+export const columns = ['Ticker', 'Company name', 'Price', 'Change', '%, change', 'Add to favorite']

@@ -3,8 +3,9 @@ const express = require('express');
 const http = require('http');
 const io = require('socket.io');
 const cors = require('cors');
+const { generateRandomBoolean } = require('./helper/getRandomBoolean');
 
-const FETCH_INTERVAL = 5000;
+const FETCH_INTERVAL = { time: 5000 };
 const PORT = process.env.PORT || 4000;
 
 const tickers = [
@@ -37,6 +38,7 @@ function getQuotes(socket) {
     dividend: randomValue(0, 1, 2),
     yield: randomValue(0, 2, 2),
     last_trade_time: utcDate(),
+    isPriceChanged: generateRandomBoolean()
   }));
 
   socket.emit('ticker', quotes);
@@ -47,11 +49,11 @@ function trackTickers(socket) {
   getQuotes(socket);
 
   // every N seconds
-  const timer = setInterval(function() {
+  const timer = setInterval(function () {
     getQuotes(socket);
-  }, FETCH_INTERVAL);
+  }, FETCH_INTERVAL.time);
 
-  socket.on('disconnect', function() {
+  socket.on('disconnect', function () {
     clearInterval(timer);
   });
 }
@@ -66,12 +68,13 @@ const socketServer = io(server, {
   }
 });
 
-app.get('/', function(req, res) {
+app.get('/', function (req, res) {
   res.sendFile(__dirname + '/index.html');
 });
 
 socketServer.on('connection', (socket) => {
-  socket.on('start', () => {
+  socket.on('start', (timer) => {
+    FETCH_INTERVAL.time = timer
     trackTickers(socket);
   });
 });
